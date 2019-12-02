@@ -1,0 +1,133 @@
+import processing.serial.*;
+import processing.video.*;
+
+
+
+
+Serial myPort;  // The serial port
+int sensor1 = 0;
+int sensor2 = 0;
+int sensor3 = 0;
+float mappedSensor1;
+float mappedSensor2;
+float mappedSensor3;
+PImage Image1;
+PImage Image2;
+PImage Image3;
+Movie movie1;
+Movie movie2;
+Movie movie3;
+int selectedM = 0;
+
+
+
+
+PImage Frontimg;  // Declare variable "a" of type PImage
+
+// Declare variable "a" of type PImage
+
+void setup() {
+    fullScreen();
+  // List all the available serial ports in the console
+  printArray(Serial.list());
+   Image1 = loadImage("image1.jpg");  // Load the image into the program
+   Image2 = loadImage("image2.jpg");  // Load the image into the program  
+   Image3 = loadImage("image3.jpg");  // Load the image into the program  
+
+  frameRate(30);
+  movie1 = new Movie(this, "Butterflies.mp4");
+  movie1.play();
+  movie1.speed(5);
+  movie1.volume(0);
+
+  movie2 = new Movie(this, "Tree Branches.mp4");
+  movie2.play();
+  movie2.speed(5);
+  movie2.volume(0);
+   
+  movie3 = new Movie(this, "Twisted Lines_1.mp4");
+  movie3.play();
+  movie3.speed(5);
+  movie3.volume(0);
+   
+
+  // Change the 0 to the appropriate number of the serial port
+  // that your microcontroller is attached to.
+  String portName = Serial.list()[0];
+  myPort = new Serial(this, portName, 9600);
+  // read incoming bytes to a buffer
+  // until you get a linefeed (ASCII 10):
+  myPort.bufferUntil('\n');
+}
+
+
+void draw() {
+  background(0);
+ 
+  if (sensor1 > 1000) {
+      selectedM = 1;
+      movie1.jump(0);
+  }
+  else if (sensor2 > 1000) {
+    selectedM = 2;
+    movie2.jump(0);
+  }
+  else if (sensor3 > 1000) {
+    selectedM = 3;
+    movie3.jump(0);
+  }
+
+  switch(selectedM) {
+    case 1:
+          if (movie1.available()) {
+                movie1.read();
+                image(movie1, 0, 0, width, height);
+            }
+          break;
+    case 2:
+          if (movie2.available()) {
+                movie2.read();
+                image(movie2, 0, 0, width, height);
+            }
+          break;
+    case 3:
+          if (movie3.available()) {
+                movie3.read();
+                image(movie3, 0, 0, width, height);
+            }
+          break;
+    default:
+        break;
+  }
+
+}
+
+
+void serialEvent(Serial myPort) {
+  // read the serial buffer:
+  String myString = myPort.readStringUntil('\n');
+  if (myString != null) {
+    // println(myString);
+    myString = trim(myString);
+
+    // split the string at the commas
+    // and convert the sections into integers:
+    //int sensors[] = int(split(myString, ','));
+    String sensors[] = split(myString, ',');
+    for (int sensorNum = 0; sensorNum < sensors.length; sensorNum++) {
+      print("Sensor " + sensorNum + ": " + sensors[sensorNum] + "\t");
+    }
+    // add a linefeed at the end:
+    println();
+    sensor1 = Integer.parseInt(sensors[0]);
+    sensor2 = Integer.parseInt(sensors[1]);
+    sensor3 = Integer.parseInt(sensors[2]);  
+   
+    mappedSensor1 = map(sensor1, 0, 1023, height, 0);
+   
+  }
+}
+
+//void movieEvent(Movie m) {
+//  m.read();
+//}
